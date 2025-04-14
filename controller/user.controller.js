@@ -1,1 +1,4 @@
-const registerUser = asy
+const registerUser = async (req, res) => {
+    res.send("registered")
+}
+export {registerUser}

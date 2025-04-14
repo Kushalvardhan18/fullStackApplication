@@ -3,6 +3,8 @@ import dotenv from "dotenv"
 import cors from "cors"
 import db from "./utils/db.js"
 
+import userRoutes from "./routes/user.routes.js"   //import all routes
+
 dotenv.config()
 // console.log(process.env.PORT);
 
@@ -18,7 +20,7 @@ app.use(
 )
 
 app.use(express.json()) // to accept Json data
-app.use(express.urlencoded({extended:true}))  // to accept the url encodes
+app.use(express.urlencoded({ extended: true }))  // to accept the url encodes
 
 
 const port = process.env.PORT || 4000
@@ -37,6 +39,9 @@ app.get("/aman", (req, res) => {
 
 // Connect to db
 db()
+
+// user routes
+app.use("/api/v1/users", userRoutes)
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
