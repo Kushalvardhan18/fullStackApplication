@@ -14,7 +14,7 @@ export const isLoggedIn = async (req, res, next) => {
             })
         }
 
-        const decoded = jwt.verify(token, process.env.SECRET_KEY)
+        const decoded = await jwt.verify(token, process.env.SECRET_KEY)
         console.log("decoded data :", decoded);
 
         req.user = decoded
@@ -29,5 +29,4 @@ export const isLoggedIn = async (req, res, next) => {
             message: "Internal Server Error"
         })
     }
-    next()
 } 
