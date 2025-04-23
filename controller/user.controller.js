@@ -3,7 +3,7 @@ import crypto from "crypto"
 import nodemailer from "nodemailer"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import { response } from "express"
+
 
 const registerUser = async (req, res) => {
     // get data  
@@ -96,21 +96,30 @@ const verifyUser = async (req, res) => {
             message: "Invalid token"
         })
     }
-    console.log(token);
-    
-    const user = await User.findOne({ verificationToken: token })
-    if (!user) {
-        return res.status(400).json({
-            message: "Invalid token"
+    try {
+        const user = await User.findOne({ verificationToken: token })
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid token"
+            })
+        }
+
+        user.isVerified = true
+        user.verificationToken = undefined
+        await user.save()
+        res.status(200).json({
+            message: "User verified successfully",
+            success: true,
         })
+    } catch (error) {
+        res.status(400).json({
+            message: "User not verified",
+            error,
+            success: false,
+        });
     }
 
-    user.isVerified = true
 
-
-    user.verificationToken = undefined
-
-    await user.save()
 }
 
 
@@ -138,7 +147,7 @@ const login = async (req, res) => {
                 message: "Invalid email or password"
             })
         }
-        const token = jwt.sign({ id: user._id, role: user._role },
+        const token = jwt.sign({ id: user._id, role: user.role },
             process.env.SECRET_KEY, {
             expiresIn: '24h'
         }
@@ -154,7 +163,7 @@ const login = async (req, res) => {
             success: true,
             message: "Login successfull",
             token,
-            user: { id: user._id, name: user._name, role: user._role }
+            user: { id: user._id, name: user.name, role: user.role }
         })
 
     } catch (error) {
@@ -164,7 +173,88 @@ const login = async (req, res) => {
             success: false
         })
     }
-} 
+}
+
+const getProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password')
+        console.log(user);
+
+        if (!user) {
+           return res.status(400).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+        res.status(200).json({
+            success: true,
+            user
+        })
+    } catch (error) {
+        res.status(400).json({
+            message: "Can't get profile",
+            error,
+            success: false
+        })
+    }
+}
+
+const logOutUser = async (req, res) => {
+    try {
+        res.cookie("token", "", {})
+        res.status(200).json({
+            success: true,
+            message: "Logged Out successfully"
+        })
+
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            message: "Logged Out Failed"
+        })
+    }
+}
+
+const forgotPassword = async (req, res) => {
+    //get email -- req.body
+    // find user based on emaail
+    // generate resetpasswordtoken  
+    // resetExpiry -- Date.now() +10*60*1000
+    // user save()
+    // send email to reset password ==> design url
+    //
+
+    try {
+
+    } catch (error) {
+
+    }
+}
+
+const resetPassword = async (req, res) => {
+
+    // collect token from params
+    // password from req.body
 
 
-export { registerUser, verifyUser ,login}
+    try {
+        const { token } = req.params
+        const { password } = req.body
+        try {
+            const user = await User.findOne({
+                resetPasswordToken: token,
+                resetPasswordExpires: { $gt: Date.now() }
+            })
+
+            //set password in user
+            // reset token, resetexpiry 
+            // save
+        } catch (error) {
+
+        }
+    } catch (error) {
+
+    }
+}
+
+export { registerUser, verifyUser, login, getProfile, logOutUser, forgotPassword, resetPassword }
